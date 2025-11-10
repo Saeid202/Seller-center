@@ -1,6 +1,6 @@
-import type { Metadata } from "next";
+'use client'
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 
 import { LoginForm } from "@/components/auth/login-form";
 import {
@@ -11,24 +11,29 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { getCurrentSession } from "@/lib/auth/session";
+import { useEffect } from "react";
 
-export const metadata: Metadata = {
-  title: "Seller Login | Myshop",
-};
 
-interface LoginPageProps {
-  searchParams?: Record<string, string | string[] | undefined>;
-}
 
-export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const session = await getCurrentSession();
-  if (session) {
-    redirect("/dashboard/products");
-  }
 
-  const redirectToParam =
-    typeof searchParams?.redirectTo === "string" ? searchParams.redirectTo : null;
 
+export default function LoginPage() {
+
+  const searchParams = useSearchParams()
+
+  useEffect(()=>{
+  getCurrentSession().then((session) => {
+    if (session) {
+        redirect("/dashboard/products");
+      }
+  });
+  },[])
+
+  
+ 
+  
+
+  const redirectToParam = searchParams.get("redirectTo") ? searchParams.get("redirectTo"): null   
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-slate-50 px-4 py-12">
       <div className="mx-auto w-full max-w-md space-y-6">
@@ -51,7 +56,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </CardHeader>
 
           <CardContent>
-            <LoginForm redirectTo={redirectToParam} />
+            <LoginForm  redirectTo={redirectToParam} />
           </CardContent>
         </Card>
 

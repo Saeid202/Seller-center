@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { ProfileForm } from "@/components/profile/profile-form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/session";
-import { createSupabaseServerClient } from "@/lib/supabase/server-client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import type { Database } from "@/types/database";
 
 export const metadata: Metadata = {
@@ -19,7 +19,7 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseBrowserClient();
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")

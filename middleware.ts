@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { createSupabaseBrowserClient } from "./lib/supabase/browser-client";
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next({
@@ -8,23 +9,25 @@ export async function middleware(request: NextRequest) {
     },
   });
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name) {
-          return request.cookies.get(name)?.value;
-        },
-        set(name, value, options) {
-          response.cookies.set({ name, value, ...options });
-        },
-        remove(name, options) {
-          response.cookies.set({ name, value: "", ...options });
-        },
-      },
-    },
-  );
+  // const supabase = createServerClient(
+  //   process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  //   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+  //   {
+  //     cookies: {
+  //       get(name) {
+  //         return request.cookies.get(name)?.value;
+  //       },
+  //       set(name, value, options) {
+  //         response.cookies.set({ name, value, ...options });
+  //       },
+  //       remove(name, options) {
+  //         response.cookies.set({ name, value: "", ...options });
+  //       },
+  //     },
+  //   },
+  // );
+
+   const supabase=createSupabaseBrowserClient()
 
   const {
     data: { session },

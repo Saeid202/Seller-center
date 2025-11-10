@@ -1,9 +1,9 @@
 import { cache } from "react";
 
-import { createSupabaseServerClient } from "@/lib/supabase/server-client";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 
 export const getCurrentSession = cache(async () => {
-  const supabase = createSupabaseServerClient();
+  const supabase = createSupabaseBrowserClient();
   const {
     data: { session },
   } = await supabase.auth.getSession();
