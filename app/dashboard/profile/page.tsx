@@ -19,7 +19,7 @@ export default async function ProfilePage() {
     redirect("/login");
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("*")

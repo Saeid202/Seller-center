@@ -29,7 +29,7 @@ export interface ProductInput {
 export type ProductUpdate = Partial<ProductInput>;
 
 export async function getProductsBySeller(sellerId: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   return supabase
     .from("products")
     .select("*")
@@ -38,12 +38,12 @@ export async function getProductsBySeller(sellerId: string) {
 }
 
 export async function getProductById(id: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   return supabase.from("products").select("*").eq("id", id).maybeSingle();
 }
 
 export async function createProduct(sellerId: string, input: ProductInput) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   return supabase
     .from("products")
     .insert({
@@ -55,7 +55,7 @@ export async function createProduct(sellerId: string, input: ProductInput) {
 }
 
 export async function updateProduct(id: string, input: ProductUpdate) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   return supabase
     .from("products")
     .update({
@@ -68,7 +68,7 @@ export async function updateProduct(id: string, input: ProductUpdate) {
 }
 
 export async function deleteProduct(id: string) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   return supabase.from("products").delete().eq("id", id);
 }
 

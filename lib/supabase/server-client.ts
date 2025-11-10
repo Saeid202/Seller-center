@@ -4,20 +4,20 @@ import type { CookieOptions } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
 
-function getMutableCookieStore() {
-  const store = cookies();
+type CookieStore = Awaited<ReturnType<typeof cookies>>;
+type MutableCookieStore = CookieStore & {
+  set?: (options: { name: string; value: string } & Partial<CookieOptions>) => void;
+};
 
-  if (store instanceof Promise) {
-    throw new Error(
-      "Invariant: cookies() returned a Promise. Ensure this helper is not called in the edge runtime.",
-    );
-  }
+type MaybePromise<T> = T | Promise<T>;
 
+async function getMutableCookieStore(): Promise<MutableCookieStore> {
+  const store = (await (cookies() as MaybePromise<CookieStore>)) as MutableCookieStore;
   return store;
 }
 
-export function createSupabaseServerClient(): SupabaseClient {
-  const cookieStore = getMutableCookieStore();
+export async function createSupabaseServerClient(): Promise<SupabaseClient> {
+  const cookieStore = await getMutableCookieStore();
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
