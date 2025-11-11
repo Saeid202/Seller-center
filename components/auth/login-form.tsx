@@ -28,7 +28,7 @@ interface LoginFormProps {
 
 export function LoginForm({ redirectTo, className }: LoginFormProps) {
   const router = useRouter();
-  const callbackUrl = redirectTo ?? "/dashboard/products";
+  const callbackUrl = redirectTo ?? "/dashboard";
 
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [error, setError] = useState<string | null>(null);

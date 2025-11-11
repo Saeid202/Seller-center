@@ -21,7 +21,7 @@ function LoginPageInner() {
   useEffect(() => {
     void getCurrentSession().then((session) => {
       if (session) {
-        router.replace("/dashboard/products");
+        router.replace("/dashboard");
       }
     });
   }, [router]);

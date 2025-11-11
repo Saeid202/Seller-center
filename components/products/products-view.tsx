@@ -47,10 +47,12 @@ function toFormValues(product: Product): ProductFormValues {
     ? normalizedCurrency
     : DEFAULT_INCOTERM_CURRENCY;
 
+  const incoterms = product.incoterms ?? [];
+
   const incotermQuotes =
-    product.incoterms.length > 0
-      ? product.incoterms.map((quote) => ({
-          id: quote.id,
+    incoterms.length > 0
+      ? incoterms.map((quote) => ({
+          recordId: quote.id,
           term: quote.term,
           currency: quote.currency,
           price: quote.price,
@@ -58,6 +60,7 @@ function toFormValues(product: Product): ProductFormValues {
         }))
       : [
           {
+            recordId: undefined,
             term: DEFAULT_INCOTERM_TERM,
             currency: fallbackCurrency,
             price: product.price,
