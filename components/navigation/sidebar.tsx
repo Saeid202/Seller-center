@@ -17,6 +17,10 @@ const navItems = [
     name: "Products",
     href: "/dashboard/products",
   },
+  {
+    name: "Orders",
+    href: "/dashboard/orders",
+  },
 ];
 
 interface SidebarProps {

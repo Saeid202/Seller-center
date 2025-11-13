@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { Eye, Plus, Pencil, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -24,6 +25,15 @@ import {
 import type { Product } from "@/lib/products";
 import type { ProductFormValues } from "@/lib/validations/product";
 import type { CategoryWithChildren } from "@/lib/categories";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+
+const getProductImageUrl = (storagePath: string) => {
+  if (!SUPABASE_URL) {
+    return null;
+  }
+  return `${SUPABASE_URL}/storage/v1/object/public/product-images/${storagePath}`;
+};
 
 interface ProductsViewProps {
   initialProducts: Product[];
@@ -101,6 +111,12 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const viewIncoterms = viewProduct?.incoterms ?? [];
+  const viewImages = useMemo(() => {
+    if (!viewProduct?.product_images?.length) {
+      return [];
+    }
+    return [...viewProduct.product_images].sort((a, b) => a.position - b.position);
+  }, [viewProduct]);
 
   useEffect(() => {
     setProducts(initialProducts);
@@ -311,55 +327,57 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
       ) : null}
 
       {!emptyState ? (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-hidden rounded-2xl border-2 border-slate-900/80 bg-white shadow-lg">
           <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+            <thead className="bg-slate-900/10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-900">
                   Product
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-900">
                   Status
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-900">
                   Price
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-900">
                   Category
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-900">
                   Inventory
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
+                <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-900">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
               {products.map((product) => (
-                <tr key={product.id}>
+                <tr key={product.id} className="transition hover:bg-slate-100">
                   <td className="px-6 py-4">
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-slate-900">{product.name}</p>
+                      <p className="text-sm font-semibold text-slate-900">{product.name}</p>
                       {product.description ? (
-                        <p className="text-xs text-slate-500 line-clamp-2">
+                        <p className="text-xs text-slate-600 line-clamp-2">
                           {product.description}
                         </p>
                       ) : null}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <Badge variant={statusVariant[product.status]}>{product.status}</Badge>
+                    <Badge variant={statusVariant[product.status]} className="text-xs font-semibold uppercase">
+                      {product.status}
+                    </Badge>
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-700">
+                  <td className="px-6 py-4 text-sm font-semibold text-slate-900">
                     {formatCurrency(product.price, product.currency)}
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-700">
+                  <td className="px-6 py-4 text-sm font-semibold text-slate-900">
                     {product.category?.name
                       ? `${product.category.name}${product.subcategory?.name ? ` / ${product.subcategory.name}` : ""}`
                       : "—"}
                   </td>
-                  <td className="px-6 py-4 text-sm text-slate-700">
+                  <td className="px-6 py-4 text-sm font-semibold text-slate-900">
                     {product.inventory ?? "—"}
                   </td>
                   <td className="px-6 py-4">
@@ -369,7 +387,7 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
                         variant="ghost"
                         size="sm"
                         onClick={() => openView(product)}
-                        className="text-slate-600 hover:text-slate-900"
+                        className="text-slate-700 hover:text-slate-900"
                       >
                         <Eye className="mr-1 h-4 w-4" aria-hidden="true" />
                         View
@@ -379,7 +397,7 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
                         variant="ghost"
                         size="sm"
                         onClick={() => openEditForm(product)}
-                        className="text-slate-600 hover:text-slate-900"
+                        className="text-slate-700 hover:text-slate-900"
                       >
                         <Pencil className="mr-1 h-4 w-4" aria-hidden="true" />
                         Edit
@@ -425,6 +443,36 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
             </div>
           </CardHeader>
           <CardContent className="space-y-6 text-sm text-slate-700">
+            <div className="space-y-2">
+              <h4 className="text-sm font-semibold text-slate-900">Images</h4>
+              {viewImages.length ? (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {viewImages.map((image) => {
+                    const url = getProductImageUrl(image.storage_path);
+                    if (!url) {
+                      return null;
+                    }
+                    return (
+                      <div
+                        key={image.id}
+                        className="overflow-hidden rounded-lg border border-slate-200 bg-slate-50"
+                      >
+                        <Image
+                          src={url}
+                          alt={`${viewProduct.name} image`}
+                          width={480}
+                          height={360}
+                          className="h-48 w-full object-cover"
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-500">No product images uploaded yet.</p>
+              )}
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div>
                 <p className="text-xs uppercase tracking-wide text-slate-500">Price</p>

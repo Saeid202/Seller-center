@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:scraper": "tsx --test tests/scraper-normalization.test.ts"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.9",
@@ -35,6 +36,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "tsx": "^4.20.0"
   }
 }

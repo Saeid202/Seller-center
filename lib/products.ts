@@ -15,6 +15,13 @@ export interface ProductIncoterm {
   created_at: string;
 }
 
+export interface ProductImage {
+  id: string;
+  product_id: string;
+  storage_path: string;
+  position: number;
+}
+
 export interface Product
   extends Omit<Database["public"]["Tables"]["products"]["Row"], "category_id" | "subcategory_id"> {
   category_id: string | null;
@@ -22,6 +29,7 @@ export interface Product
   category: CategoryRow | null;
   subcategory: SubcategoryRow | null;
   incoterms: ProductIncoterm[];
+  product_images: ProductImage[];
 }
 
 export interface ProductRecordInput {
@@ -70,6 +78,12 @@ const productSelect = `
     price,
     port,
     created_at
+  ),
+  product_images:product_images!product_images_product_id_fkey(
+    id,
+    product_id,
+    storage_path,
+    position
   )
 `;
 

@@ -18,8 +18,9 @@ A Next.js 14 dashboard where sellers authenticate with Supabase, manage their pr
 Create a `.env.local` (based on `env.example`) with:
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=your-project-url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+NEXT_PUBLIC_SUPABASE_URL=https://ujhdxmtcusbewkfaweeg.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGR4bXRjdXNiZXdrZmF3ZWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI2OTQ0MDAsImV4cCI6MjA3ODI3MDQwMH0.w0mD03Vz7Sih0iVfQaIk0MtEV5Dov-fOQAbuYAMMrG0
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVqaGR4bXRjdXNiZXdrZmF3ZWVnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjY5NDQwMCwiZXhwIjoyMDc4MjcwNDAwfQ.IDHWO1IVNH3AzsbYK2DDx3xSnYLddfYlGCsiTodAHuU
 
 # Optional – used by Playwright e2e tests
 E2E_SELLER_EMAIL=you@example.com
@@ -40,6 +41,7 @@ npm run dev
 npm run lint        # ESLint
 npm run typecheck   # TypeScript
 npm run test:e2e    # Playwright (requires Supabase test user)
+npm run test:scraper # Normalization unit tests (node:test)
 ```
 
 When running end-to-end tests for the first time install the browsers:
@@ -54,9 +56,17 @@ npx playwright install
 - `components/` – Reusable UI and feature-specific components
 - `lib/` – Supabase clients, data helpers, validation schemas
 - `tests/` – Playwright integration tests
+- `docs/product-scraper/` – Plans, architecture notes, and runbooks for the sourcing robot
 
 ### Notes
 
 - Dashboard routes are protected in `middleware.ts` and redirect unauthenticated users to `/login`.
 - Product mutations use Supabase server actions and show toast notifications via `sonner`.
 - Forms leverage `react-hook-form` with Zod validation for consistent client/server rules.
+
+### Product Sourcing Robot (Beta)
+
+- Prototype scraper lives in `lib/scraper/` with a CLI harness at `scripts/scraper/run-alibaba-scrape.ts`.
+- Normalization + quality scoring output to the staging table (`imported_products`) alongside job metrics (see `lib/scraper/jobs.ts`).
+- The dashboard’s Imported Leads panel lets reviewers assign categories, prefill product forms, scrape a single Alibaba product by URL, and mark items as reviewed or rejected.
+- See `docs/product-scraper/` for the phased rollout plan, monitoring guide, and open follow-up work.

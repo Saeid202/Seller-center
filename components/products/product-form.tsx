@@ -21,6 +21,15 @@ import {
 } from "@/lib/constants/incoterms";
 import type { CategoryWithChildren } from "@/lib/categories";
 import { productFormSchema, type ProductFormValues } from "@/lib/validations/product";
+import {
+  FIELD_FRAME_CLASS,
+  FIELD_FRAME_WIDE_CLASS,
+  FIELD_LABEL_CLASS,
+  INPUT_EMPHASIS_CLASS,
+  SELECT_EMPHASIS_CLASS,
+  TEXTAREA_EMPHASIS_CLASS,
+} from "@/lib/styles/forms";
+import { cn } from "@/lib/utils";
 
 const INCOTERM_TERM_OPTIONS = INCOTERM_OPTIONS.map((option) => option.code) as ReadonlyArray<
   ProductFormValues["incoterms"][number]["term"]
@@ -347,30 +356,40 @@ export function ProductForm({
   return (
     <form onSubmit={submitHandler} className="space-y-8" noValidate>
       <section className="space-y-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900">Product information</h3>
-          <p className="text-sm text-slate-500">
+        <div className="space-y-1">
+          <h3 className="text-base font-bold uppercase tracking-wide text-slate-900">Product information</h3>
+          <p className="text-sm font-semibold text-slate-700">
             Give your listing a clear name and summary to help buyers understand the offer.
           </p>
         </div>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="name">Product name</Label>
+        <div className={cn("sm:col-span-2", FIELD_FRAME_CLASS)}>
+          <Label className={FIELD_LABEL_CLASS} htmlFor="name">
+            Product name
+          </Label>
           <Controller
             control={control}
             name="name"
             render={({ field }) => (
-                <Input id="name" placeholder="Premium cotton t-shirt" value={field.value} onChange={field.onChange} />
-              )}
-            />
-            {errors?.name ? <p className="text-xs text-red-600">{errors.name.message as string}</p> : null}
+              <Input
+                id="name"
+                placeholder="Premium cotton t-shirt"
+                value={field.value}
+                onChange={field.onChange}
+                className={INPUT_EMPHASIS_CLASS}
+              />
+            )}
+          />
+          {errors?.name ? <p className="text-xs text-red-600">{errors.name.message as string}</p> : null}
         </div>
 
-        <div className="space-y-3 sm:col-span-2">
+        <div className={cn("sm:col-span-2", FIELD_FRAME_WIDE_CLASS)}>
           <div className="flex items-center justify-between">
             <div>
-              <Label htmlFor="product-images">Product images</Label>
-              <p className="text-xs text-slate-500">
+              <Label className={FIELD_LABEL_CLASS} htmlFor="product-images">
+                Product images
+              </Label>
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-700">
                 Upload up to {MAX_IMAGE_COUNT} images. Max 5MB each. You can remove or reorder them later.
               </p>
             </div>
@@ -425,18 +444,24 @@ export function ProductForm({
               ))}
             </div>
           ) : (
-            <div className="flex min-h-[140px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white">
-              <div className="text-center text-sm text-slate-500">
+            <button
+              type="button"
+              onClick={openFileDialog}
+              className="flex w-full min-h-[140px] items-center justify-center rounded-lg border border-dashed border-slate-600 bg-slate-50 text-center text-sm font-semibold text-slate-700 transition hover:border-slate-900 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/40"
+            >
+              <span>
                 <p>No images selected yet.</p>
                 <p>Click &ldquo;Add images&rdquo; to start uploading.</p>
-              </div>
-            </div>
+              </span>
+            </button>
           )}
           {imageError ? <p className="text-xs text-red-600">{imageError}</p> : null}
         </div>
 
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="description">Description</Label>
+        <div className={cn("sm:col-span-2", FIELD_FRAME_CLASS)}>
+          <Label className={FIELD_LABEL_CLASS} htmlFor="description">
+            Description
+          </Label>
           <Controller
             control={control}
             name="description"
@@ -444,7 +469,7 @@ export function ProductForm({
               <Textarea
                 id="description"
                 placeholder="Highlight key details buyers should know."
-                className="h-28"
+                className={cn("h-28", TEXTAREA_EMPHASIS_CLASS)}
                 value={field.value ?? ""}
                 onChange={(event) => field.onChange(event.target.value)}
               />
@@ -453,7 +478,7 @@ export function ProductForm({
           {errors?.description ? (
               <p className="text-xs text-red-600">{errors.description.message as string}</p>
           ) : (
-            <p className="text-xs text-slate-500">
+            <p className="text-xs font-semibold text-slate-700">
               Appears on the product detail page. Keep it concise and descriptive.
             </p>
           )}
@@ -462,9 +487,9 @@ export function ProductForm({
       </section>
 
       <section className="space-y-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900">Classification</h3>
-          <p className="text-sm text-slate-500">
+        <div className="space-y-1">
+          <h3 className="text-base font-bold uppercase tracking-wide text-slate-900">Classification</h3>
+          <p className="text-sm font-semibold text-slate-700">
             Categories help buyers filter products. Make sure the HS code matches your customs paperwork.
           </p>
         </div>
@@ -474,15 +499,17 @@ export function ProductForm({
           </Alert>
         ) : null}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="categoryId">Category</Label>
+          <div className={FIELD_FRAME_CLASS}>
+            <Label className={FIELD_LABEL_CLASS} htmlFor="categoryId">
+              Category
+            </Label>
             <Controller
               control={control}
               name="categoryId"
               render={({ field }) => (
                 <select
                   id="categoryId"
-                  className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20"
+                  className={SELECT_EMPHASIS_CLASS}
                   value={field.value}
                   onChange={(event) => field.onChange(event.target.value)}
                   disabled={hasNoCategories}
@@ -499,15 +526,17 @@ export function ProductForm({
             {errors?.categoryId ? <p className="text-xs text-red-600">{errors.categoryId.message as string}</p> : null}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="subcategoryId">Subcategory</Label>
+          <div className={FIELD_FRAME_CLASS}>
+            <Label className={FIELD_LABEL_CLASS} htmlFor="subcategoryId">
+              Subcategory
+            </Label>
             <Controller
               control={control}
               name="subcategoryId"
               render={({ field }) => (
                 <select
                   id="subcategoryId"
-                  className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20"
+                  className={SELECT_EMPHASIS_CLASS}
                   value={field.value}
                   onChange={(event) => field.onChange(event.target.value)}
                   disabled={!subcategoryOptions.length}
@@ -528,8 +557,10 @@ export function ProductForm({
             ) : null}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="hsCode">HS code</Label>
+          <div className={FIELD_FRAME_CLASS}>
+            <Label className={FIELD_LABEL_CLASS} htmlFor="hsCode">
+              HS code
+            </Label>
             <Controller
               control={control}
               name="hsCode"
@@ -539,6 +570,7 @@ export function ProductForm({
                   placeholder="Ex: 610910"
                   value={field.value ?? ""}
                   onChange={(event) => field.onChange(event.target.value)}
+                  className={INPUT_EMPHASIS_CLASS}
                 />
               )}
             />
@@ -548,9 +580,9 @@ export function ProductForm({
       </section>
 
       <section className="space-y-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900">Incoterms</h3>
-          <p className="text-sm text-slate-500">Specify commercial terms and pricing for each quote you offer.</p>
+        <div className="space-y-1">
+          <h3 className="text-base font-bold uppercase tracking-wide text-slate-900">Incoterms</h3>
+          <p className="text-sm font-semibold text-slate-700">Specify commercial terms and pricing for each quote you offer.</p>
         </div>
         <div className="space-y-3">
           {incotermFields.map((field, index) => {
@@ -558,17 +590,19 @@ export function ProductForm({
             return (
             <div
               key={field.recordId ?? field.id ?? index}
-              className="grid grid-cols-1 gap-4 rounded-lg border border-slate-200 p-4 md:grid-cols-4"
+              className="grid grid-cols-1 gap-4 rounded-2xl border-2 border-slate-900/70 bg-white/80 p-4 shadow-md md:grid-cols-4"
             >
-              <div className="space-y-2">
-                <Label htmlFor={`incoterms.${index}.currency`}>Currency</Label>
+              <div className={FIELD_FRAME_CLASS}>
+                <Label className={FIELD_LABEL_CLASS} htmlFor={`incoterms.${index}.currency`}>
+                  Currency
+                </Label>
                 <Controller
                   control={control}
                   name={`incoterms.${index}.currency`}
                   render={({ field: currencyField }) => (
                     <select
                       id={`incoterms.${index}.currency`}
-                      className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20"
+                      className={SELECT_EMPHASIS_CLASS}
                       value={currencyField.value}
                       onChange={currencyField.onChange}
                     >
@@ -582,8 +616,10 @@ export function ProductForm({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor={`incoterms.${index}.price`}>Price</Label>
+              <div className={FIELD_FRAME_CLASS}>
+                <Label className={FIELD_LABEL_CLASS} htmlFor={`incoterms.${index}.price`}>
+                  Price
+                </Label>
                 <Controller
                   control={control}
                   name={`incoterms.${index}.price`}
@@ -597,6 +633,7 @@ export function ProductForm({
                       onChange={(event) => priceField.onChange(event.target.value)}
                       placeholder="0.00"
                       inputMode="decimal"
+                      className={INPUT_EMPHASIS_CLASS}
                     />
                   )}
                 />
@@ -605,15 +642,17 @@ export function ProductForm({
                 ) : null}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor={`incoterms.${index}.term`}>Term</Label>
+              <div className={FIELD_FRAME_CLASS}>
+                <Label className={FIELD_LABEL_CLASS} htmlFor={`incoterms.${index}.term`}>
+                  Term
+                </Label>
                 <Controller
                   control={control}
                   name={`incoterms.${index}.term`}
                   render={({ field: termField }) => (
                     <select
                       id={`incoterms.${index}.term`}
-                      className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20"
+                      className={SELECT_EMPHASIS_CLASS}
                       value={termField.value}
                       onChange={termField.onChange}
                     >
@@ -627,15 +666,17 @@ export function ProductForm({
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor={`incoterms.${index}.port`}>Port</Label>
+              <div className={FIELD_FRAME_CLASS}>
+                <Label className={FIELD_LABEL_CLASS} htmlFor={`incoterms.${index}.port`}>
+                  Port
+                </Label>
                 <Controller
                   control={control}
                   name={`incoterms.${index}.port`}
                   render={({ field: portField }) => (
                     <select
                       id={`incoterms.${index}.port`}
-                      className="h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/20"
+                      className={SELECT_EMPHASIS_CLASS}
                       value={portField.value}
                       onChange={portField.onChange}
                     >
@@ -674,22 +715,24 @@ export function ProductForm({
             >
               Add incoterm quote
             </Button>
-            <p className="text-xs text-slate-500">You can add up to five incoterm quotes.</p>
+            <p className="text-xs font-semibold text-slate-600">You can add up to five incoterm quotes.</p>
           </div>
           {incotermRootError ? <p className="text-xs text-red-600">{incotermRootError}</p> : null}
         </div>
       </section>
 
       <section className="space-y-4">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-900">Shipping &amp; packaging</h3>
-          <p className="text-sm text-slate-500">
+        <div className="space-y-1">
+          <h3 className="text-base font-bold uppercase tracking-wide text-slate-900">Shipping &amp; packaging</h3>
+          <p className="text-sm font-semibold text-slate-700">
             Capture how your minimum order quantity translates into outbound units for logistics.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
-          <div className="space-y-2">
-            <Label htmlFor="moq">MOQ (pieces)</Label>
+          <div className={FIELD_FRAME_CLASS}>
+            <Label className={FIELD_LABEL_CLASS} htmlFor="moq">
+              MOQ (pieces)
+            </Label>
             <Controller
               control={control}
               name="moq"
@@ -703,18 +746,21 @@ export function ProductForm({
                   onChange={(event) => field.onChange(event.target.value)}
                   placeholder="e.g. 500"
                   inputMode="numeric"
+                  className={INPUT_EMPHASIS_CLASS}
                 />
               )}
             />
             {errors?.moq ? (
               <p className="text-xs text-red-600">{errors.moq.message as string}</p>
             ) : (
-              <p className="text-xs text-slate-500">Minimum order quantity in individual units.</p>
+              <p className="text-xs font-semibold text-slate-700">Minimum order quantity in individual units.</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="cartonsPerMoq">Cartons (per MOQ)</Label>
+          <div className={FIELD_FRAME_CLASS}>
+            <Label className={FIELD_LABEL_CLASS} htmlFor="cartonsPerMoq">
+              Cartons (per MOQ)
+            </Label>
             <Controller
               control={control}
               name="cartonsPerMoq"
@@ -728,18 +774,21 @@ export function ProductForm({
                   onChange={(event) => field.onChange(event.target.value)}
                   placeholder="Optional"
                   inputMode="decimal"
+                  className={INPUT_EMPHASIS_CLASS}
                 />
               )}
             />
             {errors?.cartonsPerMoq ? (
               <p className="text-xs text-red-600">{errors.cartonsPerMoq.message as string}</p>
             ) : (
-              <p className="text-xs text-slate-500">Total cartons required to ship the MOQ.</p>
+              <p className="text-xs font-semibold text-slate-700">Total cartons required to ship the MOQ.</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="palletsPerMoq">Pallets (per MOQ)</Label>
+          <div className={FIELD_FRAME_CLASS}>
+            <Label className={FIELD_LABEL_CLASS} htmlFor="palletsPerMoq">
+              Pallets (per MOQ)
+            </Label>
             <Controller
               control={control}
               name="palletsPerMoq"
@@ -753,18 +802,21 @@ export function ProductForm({
                   onChange={(event) => field.onChange(event.target.value)}
                   placeholder="Optional"
                   inputMode="decimal"
+                  className={INPUT_EMPHASIS_CLASS}
                 />
               )}
             />
             {errors?.palletsPerMoq ? (
               <p className="text-xs text-red-600">{errors.palletsPerMoq.message as string}</p>
             ) : (
-              <p className="text-xs text-slate-500">Number of pallets the shipment occupies.</p>
+              <p className="text-xs font-semibold text-slate-700">Number of pallets the shipment occupies.</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="containers20ft">Containers — 20ft (per MOQ)</Label>
+          <div className={FIELD_FRAME_CLASS}>
+            <Label className={FIELD_LABEL_CLASS} htmlFor="containers20ft">
+              Containers — 20ft (per MOQ)
+            </Label>
             <Controller
               control={control}
               name="containers20ft"
@@ -778,18 +830,21 @@ export function ProductForm({
                   onChange={(event) => field.onChange(event.target.value)}
                   placeholder="Optional"
                   inputMode="decimal"
+                  className={INPUT_EMPHASIS_CLASS}
                 />
               )}
             />
             {errors?.containers20ft ? (
               <p className="text-xs text-red-600">{errors.containers20ft.message as string}</p>
             ) : (
-              <p className="text-xs text-slate-500">20ft containers needed for the MOQ (if applicable).</p>
+              <p className="text-xs font-semibold text-slate-700">20ft containers needed for the MOQ (if applicable).</p>
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="containers40ft">Containers — 40ft (per MOQ)</Label>
+          <div className={FIELD_FRAME_CLASS}>
+            <Label className={FIELD_LABEL_CLASS} htmlFor="containers40ft">
+              Containers — 40ft (per MOQ)
+            </Label>
             <Controller
               control={control}
               name="containers40ft"
@@ -803,13 +858,14 @@ export function ProductForm({
                   onChange={(event) => field.onChange(event.target.value)}
                   placeholder="Optional"
                   inputMode="decimal"
+                  className={INPUT_EMPHASIS_CLASS}
                 />
               )}
             />
             {errors?.containers40ft ? (
               <p className="text-xs text-red-600">{errors.containers40ft.message as string}</p>
             ) : (
-              <p className="text-xs text-slate-500">40ft containers needed for the MOQ (if applicable).</p>
+              <p className="text-xs font-semibold text-slate-700">40ft containers needed for the MOQ (if applicable).</p>
             )}
           </div>
         </div>
@@ -817,7 +873,7 @@ export function ProductForm({
         cartonsPerPallet !== null ||
         palletsPerContainer20 !== null ||
         palletsPerContainer40 !== null ? (
-          <div className="space-y-1 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600">
+          <div className="space-y-1 rounded-xl border-2 border-slate-900/70 bg-slate-50 px-4 py-3 text-xs font-semibold text-slate-700">
             {piecesPerCarton !== null ? (
               <p>≈ {piecesPerCarton.toFixed(2)} pieces per carton</p>
             ) : null}

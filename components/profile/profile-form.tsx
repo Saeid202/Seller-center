@@ -7,12 +7,20 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Alert } from "@/components/ui/alert";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import {
+  FIELD_FRAME_CLASS,
+  FIELD_FRAME_WIDE_CLASS,
+  FIELD_LABEL_CLASS,
+  INPUT_EMPHASIS_CLASS,
+  TEXTAREA_EMPHASIS_CLASS,
+} from "@/lib/styles/forms";
+import { cn } from "@/lib/utils";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -119,19 +127,29 @@ export function ProfileForm({ profile }: ProfileFormProps) {
   return (
     <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)} noValidate>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="full_name">Full name</Label>
-          <Input id="full_name" {...form.register("full_name")} placeholder="Jane Doe" />
+        <div className={FIELD_FRAME_CLASS}>
+          <Label className={FIELD_LABEL_CLASS} htmlFor="full_name">
+            Full name
+          </Label>
+          <Input
+            id="full_name"
+            {...form.register("full_name")}
+            placeholder="Jane Doe"
+            className={INPUT_EMPHASIS_CLASS}
+          />
           {form.formState.errors.full_name ? (
             <p className="text-xs text-red-600">{form.formState.errors.full_name.message}</p>
           ) : null}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="company_name">Company</Label>
+        <div className={FIELD_FRAME_CLASS}>
+          <Label className={FIELD_LABEL_CLASS} htmlFor="company_name">
+            Company
+          </Label>
           <Input
             id="company_name"
             {...form.register("company_name")}
             placeholder="Myshop LLC"
+            className={INPUT_EMPHASIS_CLASS}
           />
           {form.formState.errors.company_name ? (
             <p className="text-xs text-red-600">
@@ -142,19 +160,29 @@ export function ProfileForm({ profile }: ProfileFormProps) {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" {...form.register("phone")} placeholder="+1 555 0100" />
+        <div className={FIELD_FRAME_CLASS}>
+          <Label className={FIELD_LABEL_CLASS} htmlFor="phone">
+            Phone
+          </Label>
+          <Input
+            id="phone"
+            {...form.register("phone")}
+            placeholder="+1 555 0100"
+            className={INPUT_EMPHASIS_CLASS}
+          />
           {form.formState.errors.phone ? (
             <p className="text-xs text-red-600">{form.formState.errors.phone.message}</p>
           ) : null}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="website">Website</Label>
+        <div className={FIELD_FRAME_CLASS}>
+          <Label className={FIELD_LABEL_CLASS} htmlFor="website">
+            Website
+          </Label>
           <Input
             id="website"
             {...form.register("website")}
             placeholder="https://www.myshop.com"
+            className={INPUT_EMPHASIS_CLASS}
           />
           {form.formState.errors.website ? (
             <p className="text-xs text-red-600">{form.formState.errors.website.message}</p>
@@ -162,11 +190,13 @@ export function ProfileForm({ profile }: ProfileFormProps) {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="bio">Bio</Label>
+      <div className={FIELD_FRAME_WIDE_CLASS}>
+        <Label className={FIELD_LABEL_CLASS} htmlFor="bio">
+          Bio
+        </Label>
         <Textarea
           id="bio"
-          className="h-32"
+          className={cn("h-32", TEXTAREA_EMPHASIS_CLASS)}
           {...form.register("bio")}
           placeholder="Tell buyers about your brand and what makes your products special."
         />

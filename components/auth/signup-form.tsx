@@ -7,11 +7,16 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
+import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Alert } from "@/components/ui/alert";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import {
+  FIELD_FRAME_CLASS,
+  FIELD_LABEL_CLASS,
+  INPUT_EMPHASIS_CLASS,
+} from "@/lib/styles/forms";
 import { cn } from "@/lib/utils";
 
 const signupSchema = z
@@ -104,22 +109,27 @@ export function SignupForm({ redirectTo, className }: SignupFormProps) {
       className={cn("space-y-6", className)}
       noValidate
     >
-      <div className="space-y-2">
-        <Label htmlFor="fullName">Full name</Label>
+      <div className={FIELD_FRAME_CLASS}>
+        <Label className={FIELD_LABEL_CLASS} htmlFor="fullName">
+          Full name
+        </Label>
         <Input
           id="fullName"
           placeholder="Jane Doe"
           autoComplete="name"
           {...form.register("fullName")}
           aria-invalid={Boolean(form.formState.errors.fullName)}
+          className={INPUT_EMPHASIS_CLASS}
         />
         {form.formState.errors.fullName ? (
           <p className="text-sm text-red-600">{form.formState.errors.fullName.message}</p>
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="email">Email</Label>
+      <div className={FIELD_FRAME_CLASS}>
+        <Label className={FIELD_LABEL_CLASS} htmlFor="email">
+          Email
+        </Label>
         <Input
           id="email"
           type="email"
@@ -127,14 +137,17 @@ export function SignupForm({ redirectTo, className }: SignupFormProps) {
           autoComplete="email"
           {...form.register("email")}
           aria-invalid={Boolean(form.formState.errors.email)}
+          className={INPUT_EMPHASIS_CLASS}
         />
         {form.formState.errors.email ? (
           <p className="text-sm text-red-600">{form.formState.errors.email.message}</p>
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Password</Label>
+      <div className={FIELD_FRAME_CLASS}>
+        <Label className={FIELD_LABEL_CLASS} htmlFor="password">
+          Password
+        </Label>
         <Input
           id="password"
           type="password"
@@ -142,14 +155,17 @@ export function SignupForm({ redirectTo, className }: SignupFormProps) {
           autoComplete="new-password"
           {...form.register("password")}
           aria-invalid={Boolean(form.formState.errors.password)}
+          className={INPUT_EMPHASIS_CLASS}
         />
         {form.formState.errors.password ? (
           <p className="text-sm text-red-600">{form.formState.errors.password.message}</p>
         ) : null}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirm password</Label>
+      <div className={FIELD_FRAME_CLASS}>
+        <Label className={FIELD_LABEL_CLASS} htmlFor="confirmPassword">
+          Confirm password
+        </Label>
         <Input
           id="confirmPassword"
           type="password"
@@ -157,6 +173,7 @@ export function SignupForm({ redirectTo, className }: SignupFormProps) {
           autoComplete="new-password"
           {...form.register("confirmPassword")}
           aria-invalid={Boolean(form.formState.errors.confirmPassword)}
+          className={INPUT_EMPHASIS_CLASS}
         />
         {form.formState.errors.confirmPassword ? (
           <p className="text-sm text-red-600">

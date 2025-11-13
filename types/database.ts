@@ -69,6 +69,9 @@ export interface Database {
         pallets_per_moq: number | null;
         containers_20ft_per_moq: number | null;
         containers_40ft_per_moq: number | null;
+          primary_image_id: string | null;
+          images_count: number;
+          images_last_synced_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -96,6 +99,9 @@ export interface Database {
         pallets_per_moq?: number | null;
         containers_20ft_per_moq?: number | null;
         containers_40ft_per_moq?: number | null;
+          primary_image_id?: string | null;
+          images_count?: number;
+          images_last_synced_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -121,6 +127,9 @@ export interface Database {
         pallets_per_moq?: number | null;
         containers_20ft_per_moq?: number | null;
         containers_40ft_per_moq?: number | null;
+          primary_image_id?: string | null;
+          images_count?: number;
+          images_last_synced_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -141,6 +150,36 @@ export interface Database {
             foreignKeyName: "products_subcategory_id_fkey";
             columns: ["subcategory_id"];
             referencedRelation: "subcategories";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      product_images: {
+        Row: {
+          id: string;
+          product_id: string;
+          storage_path: string;
+          position: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          product_id: string;
+          storage_path: string;
+          position: number;
+          created_at?: string;
+        };
+        Update: {
+          product_id?: string;
+          storage_path?: string;
+          position?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "product_images_product_id_fkey";
+            columns: ["product_id"];
+            referencedRelation: "products";
             referencedColumns: ["id"];
           },
         ];

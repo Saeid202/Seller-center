@@ -15,7 +15,7 @@ export default async function DashboardLayout({ children }: DashboardLayoutProps
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
+    <div className="flex min-h-screen bg-white">
       <DashboardSidebar user={user} />
       <main className="flex-1 overflow-y-auto px-6 py-8">{children}</main>
     </div>
