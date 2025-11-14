@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useReducer, useState, useTransition } from "react";
 import { Eye, Plus, Pencil, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -51,6 +51,54 @@ const statusVariant: Record<Product["status"], "default" | "success" | "warning"
 const DEFAULT_INCOTERM_CURRENCY: IncotermCurrency = INCOTERM_CURRENCY_OPTIONS[0];
 const DEFAULT_INCOTERM_TERM: ProductFormValues["incoterms"][number]["term"] = INCOTERM_OPTIONS[0].code;
 const DEFAULT_INCOTERM_PORT: ProductFormValues["incoterms"][number]["port"] = INCOTERM_PORT_OPTIONS[0];
+const PRODUCTS_PER_PAGE = 4;
+
+interface ProductsState {
+  items: Product[];
+  currentPage: number;
+}
+
+type ProductsAction =
+  | { type: "reset"; payload: Product[] }
+  | { type: "prepend"; payload: Product }
+  | { type: "update"; payload: Product }
+  | { type: "delete"; id: string }
+  | { type: "setPage"; page: number };
+
+function getTotalPages(count: number) {
+  return Math.max(1, Math.ceil(Math.max(count, 1) / PRODUCTS_PER_PAGE));
+}
+
+function productsReducer(state: ProductsState, action: ProductsAction): ProductsState {
+  switch (action.type) {
+    case "reset":
+      return { items: action.payload, currentPage: 1 };
+    case "prepend":
+      return { items: [action.payload, ...state.items], currentPage: 1 };
+    case "update":
+      return {
+        ...state,
+        items: state.items.map((item) => (item.id === action.payload.id ? action.payload : item)),
+      };
+    case "delete": {
+      const filtered = state.items.filter((item) => item.id !== action.id);
+      const totalPages = getTotalPages(filtered.length);
+      return {
+        items: filtered,
+        currentPage: Math.min(state.currentPage, totalPages),
+      };
+    }
+    case "setPage": {
+      const totalPages = getTotalPages(state.items.length);
+      return {
+        ...state,
+        currentPage: Math.min(Math.max(1, action.page), totalPages),
+      };
+    }
+    default:
+      return state;
+  }
+}
 
 function toFormValues(product: Product): ProductFormValues {
   const normalizedCurrency = product.currency?.toUpperCase() as IncotermCurrency | undefined;
@@ -81,6 +129,7 @@ function toFormValues(product: Product): ProductFormValues {
 
   return {
     id: product.id,
+    slug: product.slug,
     name: product.name,
     description: product.description ?? "",
     status: product.status,
@@ -100,15 +149,21 @@ function toFormValues(product: Product): ProductFormValues {
 
 export function ProductsView({ initialProducts, sellerName, categories }: ProductsViewProps) {
   const router = useRouter();
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [productState, dispatchProducts] = useReducer(productsReducer, {
+    items: initialProducts,
+    currentPage: 1,
+  });
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<ProductFormMode>("create");
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
-  const [viewProduct, setViewProduct] = useState<Product | null>(null);
+  const [viewProductId, setViewProductId] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isDeletePending, startDeleteTransition] = useTransition();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const products = productState.items;
+  const currentPage = productState.currentPage;
 
   const productNameSuggestions = useMemo(() => {
     const unique = new Set<string>();
@@ -124,6 +179,22 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
     return Array.from(unique).sort((a, b) => a.localeCompare(b));
   }, [products]);
 
+  useEffect(() => {
+    dispatchProducts({ type: "reset", payload: initialProducts });
+  }, [initialProducts]);
+
+  const totalPages = getTotalPages(products.length);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * PRODUCTS_PER_PAGE;
+    return products.slice(start, start + PRODUCTS_PER_PAGE);
+  }, [products, currentPage]);
+  const showingStart = products.length ? (currentPage - 1) * PRODUCTS_PER_PAGE + 1 : 0;
+  const showingEnd = Math.min(currentPage * PRODUCTS_PER_PAGE, products.length);
+  const paginationPages = useMemo(() => Array.from({ length: totalPages }, (_, idx) => idx + 1), [totalPages]);
+  const viewProduct = useMemo(
+    () => products.find((item) => item.id === viewProductId) ?? null,
+    [products, viewProductId],
+  );
   const viewIncoterms = viewProduct?.incoterms ?? [];
   const viewImages = useMemo(() => {
     if (!viewProduct?.product_images?.length) {
@@ -131,22 +202,6 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
     }
     return [...viewProduct.product_images].sort((a, b) => a.position - b.position);
   }, [viewProduct]);
-
-  useEffect(() => {
-    setProducts(initialProducts);
-  }, [initialProducts]);
-
-  useEffect(() => {
-    if (!viewProduct) {
-      return;
-    }
-    const updated = initialProducts.find((item) => item.id === viewProduct.id);
-    if (updated) {
-      setViewProduct(updated);
-    } else {
-      setViewProduct(null);
-    }
-  }, [initialProducts, viewProduct]);
 
   const heading = useMemo(() => {
     if (formMode === "edit" && activeProduct) {
@@ -165,7 +220,7 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
     setFormMode("create");
     setFormError(null);
     setFormOpen(true);
-    setViewProduct(null);
+    setViewProductId(null);
   };
 
   const openEditForm = (product: Product) => {
@@ -173,18 +228,18 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
     setFormMode("edit");
     setFormError(null);
     setFormOpen(true);
-    setViewProduct(null);
+    setViewProductId(null);
   };
 
   const openView = (product: Product) => {
-    setViewProduct(product);
+    setViewProductId(product.id);
     setFormOpen(false);
     setFormError(null);
     setActiveProduct(null);
   };
 
   const closeView = () => {
-    setViewProduct(null);
+    setViewProductId(null);
   };
 
   const closeForm = () => {
@@ -221,15 +276,10 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
     const product = result.data;
 
     if (formMode === "edit") {
-      setProducts((prev) =>
-        prev.map((item) => (item.id === product.id ? product : item)),
-      );
-      if (viewProduct?.id === product.id) {
-        setViewProduct(product);
-      }
+      dispatchProducts({ type: "update", payload: product });
       toast.success(`${product.name} updated.`);
     } else {
-      setProducts((prev) => [product, ...prev]);
+      dispatchProducts({ type: "prepend", payload: product });
       toast.success(`${product.name} created.`);
     }
 
@@ -262,11 +312,11 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
         setPendingDeleteId(null);
         return;
       }
-      setProducts((prev) => prev.filter((item) => item.id !== product.id));
+      dispatchProducts({ type: "delete", id: product.id });
       toast.success(`${product.name} deleted.`);
       setPendingDeleteId(null);
-      if (viewProduct?.id === product.id) {
-        setViewProduct(null);
+      if (viewProductId === product.id) {
+        setViewProductId(null);
       }
       router.refresh();
     });
@@ -367,7 +417,7 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
-              {products.map((product) => (
+              {paginatedProducts.map((product) => (
                 <tr key={product.id} className="transition hover:bg-slate-100">
                   <td className="px-6 py-4">
                     <div className="space-y-1">
@@ -434,6 +484,53 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
               ))}
             </tbody>
           </table>
+          <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
+            <div className="flex flex-col gap-3 text-sm text-slate-700 lg:flex-row lg:items-center lg:justify-between">
+              <p>
+                Showing{" "}
+                <span className="font-semibold">
+                  {products.length ? `${showingStart}–${showingEnd}` : 0}
+                </span>{" "}
+                of <span className="font-semibold">{products.length}</span> products
+              </p>
+              {products.length > PRODUCTS_PER_PAGE ? (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => dispatchProducts({ type: "setPage", page: currentPage - 1 })}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  {paginationPages.map((pageNumber) => (
+                    <Button
+                      key={pageNumber}
+                      type="button"
+                      size="sm"
+                      variant={pageNumber === currentPage ? "default" : "ghost"}
+                      onClick={() => dispatchProducts({ type: "setPage", page: pageNumber })}
+                      className={pageNumber === currentPage ? "" : "text-slate-700"}
+                    >
+                      {pageNumber}
+                    </Button>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      dispatchProducts({ type: "setPage", page: currentPage + 1 })
+                    }
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          </div>
         </div>
       ) : null}
 

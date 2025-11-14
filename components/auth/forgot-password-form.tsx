@@ -3,8 +3,6 @@
 import { useMemo, useState, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -12,7 +10,6 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { PasswordInput } from "@/components/ui/password-input";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import {
   FIELD_FRAME_CLASS,
@@ -21,50 +18,48 @@ import {
 } from "@/lib/styles/forms";
 import { cn } from "@/lib/utils";
 
-const loginSchema = z.object({
+const recoverySchema = z.object({
   email: z.string().email("Enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-type LoginValues = z.infer<typeof loginSchema>;
+type RecoveryValues = z.infer<typeof recoverySchema>;
 
-interface LoginFormProps {
-  redirectTo?: string | null;
+interface ForgotPasswordFormProps {
   className?: string;
 }
 
-export function LoginForm({ redirectTo, className }: LoginFormProps) {
-  const router = useRouter();
-  const callbackUrl = redirectTo ?? "/dashboard";
-
+export function ForgotPasswordForm({ className }: ForgotPasswordFormProps) {
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const form = useForm<LoginValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<RecoveryValues>({
+    resolver: zodResolver(recoverySchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
-  const onSubmit = (values: LoginValues) => {
+  const onSubmit = (values: RecoveryValues) => {
     setError(null);
+    setInfo(null);
 
     startTransition(async () => {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: values.email,
-        password: values.password,
+      const redirectTo =
+        typeof window !== "undefined" ? `${window.location.origin}/login` : undefined;
+
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(values.email, {
+        redirectTo,
       });
 
-      if (signInError) {
-        setError(signInError.message);
+      if (resetError) {
+        setError(resetError.message);
         return;
       }
 
-      router.replace(callbackUrl);
-      router.refresh();
+      setInfo("Check your email for a link to reset your password.");
+      form.reset();
     });
   };
 
@@ -92,41 +87,15 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
         ) : null}
       </div>
 
-      <div className={FIELD_FRAME_CLASS}>
-        <Label className={FIELD_LABEL_CLASS} htmlFor="password">
-          Password
-        </Label>
-        <PasswordInput
-          id="password"
-          placeholder="••••••••"
-          autoComplete="current-password"
-          {...form.register("password")}
-          aria-invalid={Boolean(form.formState.errors.password)}
-          className={INPUT_EMPHASIS_CLASS}
-        />
-        {form.formState.errors.password ? (
-          <p className="text-sm text-red-600">
-            {form.formState.errors.password.message}
-          </p>
-        ) : null}
-      </div>
-
-      <div className="flex justify-end">
-        <Link
-          href={
-            redirectTo
-              ? `/login/forgot-password?redirectTo=${encodeURIComponent(redirectTo)}`
-              : "/login/forgot-password"
-          }
-          className="text-sm font-semibold text-slate-900 underline underline-offset-4"
-        >
-          Forgot password?
-        </Link>
-      </div>
-
       {error ? (
         <Alert variant="destructive">
           <span>{error}</span>
+        </Alert>
+      ) : null}
+
+      {info ? (
+        <Alert>
+          <span>{info}</span>
         </Alert>
       ) : null}
 
@@ -134,13 +103,14 @@ export function LoginForm({ redirectTo, className }: LoginFormProps) {
         {isPending ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            Signing in...
+            Sending reset link...
           </>
         ) : (
-          "Sign in"
+          "Send reset link"
         )}
       </Button>
     </form>
   );
 }
+
 

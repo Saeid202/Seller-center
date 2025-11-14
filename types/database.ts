@@ -49,6 +49,7 @@ export interface Database {
           id: string;
           seller_id: string;
           name: string;
+          slug: string;
           description: string | null;
           price: number;
           currency: string;
@@ -79,6 +80,7 @@ export interface Database {
           id?: string;
           seller_id: string;
           name: string;
+          slug?: string;
           description?: string | null;
           price: number;
           currency?: string;
@@ -107,6 +109,7 @@ export interface Database {
         };
         Update: {
           name?: string;
+          slug?: string;
           description?: string | null;
           price?: number;
           currency?: string;

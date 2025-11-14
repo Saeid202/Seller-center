@@ -38,11 +38,13 @@ const INCOTERM_TERM_OPTIONS = INCOTERM_OPTIONS.map((option) => option.code) as R
 const DEFAULT_INCOTERM_CURRENCY: IncotermCurrency = INCOTERM_CURRENCY_OPTIONS[0];
 const DEFAULT_INCOTERM_TERM: ProductFormValues["incoterms"][number]["term"] = INCOTERM_TERM_OPTIONS[0];
 const DEFAULT_INCOTERM_PORT: IncotermPort = INCOTERM_PORT_OPTIONS[0];
+const STATUS_OPTIONS: ProductFormValues["status"][] = ["draft", "published", "archived"];
 
 type ProductFormInputs = Omit<
   ProductFormValues,
   "inventory" | "hsCode" | "incoterms" | "moq" | "cartonsPerMoq" | "palletsPerMoq" | "containers20ft" | "containers40ft"
 > & {
+  slug?: string;
   inventory: string;
   hsCode: string;
   moq: string;
@@ -107,6 +109,7 @@ function toInputDefaults(initialValues?: Partial<ProductFormValues>): ProductFor
 
   return {
     id: initialValues?.id,
+    slug: initialValues?.slug,
     name: initialValues?.name ?? "",
     description: initialValues?.description ?? "",
     status: initialValues?.status ?? "draft",
@@ -158,6 +161,7 @@ export function ProductForm({
     watch,
     setValue,
     getValues,
+    register,
   } = useForm<ProductFormInputs>({
     resolver: zodResolver(productFormSchema) as unknown as Resolver<ProductFormInputs>,
     defaultValues: toInputDefaults(initialValues),
@@ -474,6 +478,7 @@ export function ProductForm({
 
   return (
     <form onSubmit={submitHandler} className="space-y-8" noValidate>
+      <input type="hidden" {...register("slug")} />
       <section className="space-y-4">
         <div className="space-y-1">
           <h3 className="text-base font-bold uppercase tracking-wide text-slate-900">Product information</h3>
@@ -641,6 +646,37 @@ export function ProductForm({
               </div>
             </Alert>
           ) : null}
+        </div>
+
+        <div className={FIELD_FRAME_CLASS}>
+          <Label className={FIELD_LABEL_CLASS} htmlFor="status">
+            Listing status
+          </Label>
+          <Controller
+            control={control}
+            name="status"
+            render={({ field }) => (
+              <select
+                id="status"
+                className={SELECT_EMPHASIS_CLASS}
+                value={field.value}
+                onChange={(event) => field.onChange(event.target.value)}
+              >
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {status === "draft"
+                      ? "Draft — keep private"
+                      : status === "published"
+                      ? "Published — visible to buyers"
+                      : "Archived — hidden from listings"}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+          <p className="text-xs font-semibold text-slate-700">
+            Draft items stay private, published items are visible, archived items are hidden without deleting.
+          </p>
         </div>
         </div>
       </section>

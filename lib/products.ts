@@ -34,6 +34,7 @@ export interface Product
 
 export interface ProductRecordInput {
   name: string;
+  slug: string;
   description: string | null;
   price: number;
   currency: IncotermCurrency;

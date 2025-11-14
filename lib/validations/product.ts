@@ -98,6 +98,10 @@ const incotermQuoteSchema = z.object({
 
 export const productFormSchema = z.object({
   id: z.string().uuid().optional(),
+  slug: z
+    .string()
+    .max(120)
+    .optional(),
   name: z
     .string()
     .trim()

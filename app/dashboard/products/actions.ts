@@ -32,15 +32,37 @@ function normalizeDescription(value: string | null) {
   return trimmed ? trimmed : null;
 }
 
-function toRecordInput(values: ProductFormValues): ProductRecordInput {
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "-")
+    .slice(0, 60);
+}
+
+function buildProductSlug(name: string) {
+  const base = slugify(name);
+  const suffix = randomUUID().slice(0, 8);
+  return (base || "product") + "-" + suffix;
+}
+
+function toRecordInput(values: ProductFormValues, slug: string): ProductRecordInput {
   const [primaryQuote] = values.incoterms;
   return {
     name: values.name.trim(),
+    slug,
     description: normalizeDescription(values.description),
     price: primaryQuote?.price ?? 0,
     currency: primaryQuote?.currency ?? "USD",
     status: values.status,
-    inventory: values.inventory,
+    inventory:
+      typeof values.inventory === "number"
+        ? values.inventory
+        : values.inventory && typeof values.inventory === "string"
+        ? Number(values.inventory)
+        : null,
     category_id: values.categoryId,
     subcategory_id: values.subcategoryId,
     hs_code: values.hsCode,
@@ -82,7 +104,8 @@ export async function createProductAction(
     return { error: parsed.error.flatten().formErrors.join(". ") || "Invalid product data." };
   }
 
-  const recordInput = toRecordInput(parsed.data);
+  const slug = buildProductSlug(parsed.data.name);
+  const recordInput = toRecordInput(parsed.data, slug);
   const incotermInputs = toIncotermInputs(parsed.data);
 
   if (!incotermInputs.length) {
@@ -120,7 +143,8 @@ export async function updateProductAction(
     return { error: parsed.error.flatten().formErrors.join(". ") || "Invalid product data." };
   }
 
-  const recordInput = toRecordInput(parsed.data);
+  const slug = parsed.data.slug && parsed.data.slug.trim() ? parsed.data.slug : buildProductSlug(parsed.data.name);
+  const recordInput = toRecordInput(parsed.data, slug);
   const incotermInputs = toIncotermInputs(parsed.data);
   const removedIncotermIds = parsed.data.removedIncotermIds ?? [];
 

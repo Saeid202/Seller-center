@@ -9,8 +9,9 @@ import { z } from "zod";
 
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
+import { Input } from "@/components/ui/input";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import {
   FIELD_FRAME_CLASS,
@@ -148,9 +149,8 @@ export function SignupForm({ redirectTo, className }: SignupFormProps) {
         <Label className={FIELD_LABEL_CLASS} htmlFor="password">
           Password
         </Label>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           placeholder="••••••••"
           autoComplete="new-password"
           {...form.register("password")}
@@ -166,9 +166,8 @@ export function SignupForm({ redirectTo, className }: SignupFormProps) {
         <Label className={FIELD_LABEL_CLASS} htmlFor="confirmPassword">
           Confirm password
         </Label>
-        <Input
+        <PasswordInput
           id="confirmPassword"
-          type="password"
           placeholder="••••••••"
           autoComplete="new-password"
           {...form.register("confirmPassword")}
