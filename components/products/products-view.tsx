@@ -110,6 +110,20 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const productNameSuggestions = useMemo(() => {
+    const unique = new Set<string>();
+    products.forEach((product) => {
+      if (!product?.name) {
+        return;
+      }
+      const trimmed = product.name.trim();
+      if (trimmed) {
+        unique.add(trimmed);
+      }
+    });
+    return Array.from(unique).sort((a, b) => a.localeCompare(b));
+  }, [products]);
+
   const viewIncoterms = viewProduct?.incoterms ?? [];
   const viewImages = useMemo(() => {
     if (!viewProduct?.product_images?.length) {
@@ -304,6 +318,7 @@ export function ProductsView({ initialProducts, sellerName, categories }: Produc
               onSubmit={handleSubmit}
               onCancel={closeForm}
               isSubmitting={isSubmitting}
+              productNameSuggestions={productNameSuggestions}
             />
           </div>
         </div>

@@ -2,11 +2,12 @@
 
 import Image from "next/image";
 import type { ChangeEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, type Resolver, useFieldArray, useForm } from "react-hook-form";
 import { ImagePlus, Loader2, Trash2 } from "lucide-react";
 
+import { generateProductDescriptionAction } from "@/app/dashboard/products/generate-description";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,6 +71,7 @@ interface ProductFormProps {
   isSubmitting?: boolean;
   onSubmit: (values: ProductFormValues, images: File[]) => Promise<void>;
   onCancel: () => void;
+  productNameSuggestions?: string[];
 }
 
 const MAX_IMAGE_COUNT = 8;
@@ -146,6 +148,7 @@ export function ProductForm({
   isSubmitting = false,
   onSubmit,
   onCancel,
+  productNameSuggestions = [],
 }: ProductFormProps) {
   const {
     control,
@@ -163,6 +166,9 @@ export function ProductForm({
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [imagePreviews, setImagePreviews] = useState<ImagePreview[]>([]);
   const [imageError, setImageError] = useState<string | null>(null);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [pendingDescription, setPendingDescription] = useState<string | null>(null);
 
   const {
     fields: incotermFields,
@@ -219,10 +225,43 @@ export function ProductForm({
       : null;
 
   const selectedCategoryId = watch("categoryId");
+  const nameValue = watch("name");
   const subcategoryOptions = useMemo(() => {
     const category = categories.find((item) => item.id === selectedCategoryId);
     return category?.subcategories ?? [];
   }, [categories, selectedCategoryId]);
+
+  const normalizedNameSuggestions = useMemo(() => {
+    const unique = new Set<string>();
+    for (const suggestion of productNameSuggestions) {
+      if (!suggestion) {
+        continue;
+      }
+      const trimmed = suggestion.trim();
+      if (trimmed) {
+        unique.add(trimmed);
+      }
+    }
+    return Array.from(unique);
+  }, [productNameSuggestions]);
+
+  const filteredNameSuggestions = useMemo(() => {
+    if (!normalizedNameSuggestions.length) {
+      return [];
+    }
+    const query = nameValue?.trim().toLowerCase() ?? "";
+    if (!query) {
+      return normalizedNameSuggestions.slice(0, 8);
+    }
+    return normalizedNameSuggestions
+      .filter((suggestion) => {
+        const lower = suggestion.toLowerCase();
+        return lower.includes(query) && lower !== query;
+      })
+      .slice(0, 8);
+  }, [nameValue, normalizedNameSuggestions]);
+
+  const nameSuggestionsListId = useId();
 
   useEffect(() => {
     reset(toInputDefaults(initialValues));
@@ -258,6 +297,78 @@ export function ProductForm({
 
   const openFileDialog = () => {
     fileInputRef.current?.click();
+  };
+
+  const attemptGenerateDescription = async ({
+    file,
+    auto = false,
+  }: {
+    file?: File;
+    auto?: boolean;
+  } = {}) => {
+    const productName = getValues("name")?.trim() ?? "";
+    if (!productName) {
+      if (!auto) {
+        setGenerationError("Enter a product name before generating a description.");
+      }
+      return;
+    }
+
+    const targetFile = file ?? imagePreviews[0]?.file;
+    if (!targetFile) {
+      if (!auto) {
+        setGenerationError("Add at least one product image to generate a description.");
+      }
+      return;
+    }
+
+    setIsGeneratingDescription(true);
+    setGenerationError(null);
+
+    try {
+      const payload = new FormData();
+      payload.append("productName", productName);
+      payload.append("image", targetFile);
+
+      const result = await generateProductDescriptionAction(payload);
+      if ("error" in result) {
+        setGenerationError(result.error);
+        return;
+      }
+
+      const suggestion = result.description.trim();
+      if (!suggestion) {
+        setGenerationError("We couldn't create a description from that image.");
+        return;
+      }
+
+      const currentDescription = getValues("description");
+      if (!currentDescription?.trim()) {
+        setValue("description", suggestion, { shouldDirty: true });
+        setPendingDescription(null);
+      } else {
+        setPendingDescription(suggestion);
+      }
+    } catch (error) {
+      console.error("[ProductForm] Failed to generate description", error);
+      setGenerationError("Something went wrong while generating the description. Try again.");
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
+
+  const applyPendingDescription = () => {
+    if (!pendingDescription) {
+      return;
+    }
+    setValue("description", pendingDescription, { shouldDirty: true });
+    setPendingDescription(null);
+    setGenerationError(null);
+  };
+
+  const dismissPendingDescription = () => {
+    setPendingDescription(null);
+    setGenerationError(null);
   };
 
   const handleImagesSelected = (event: ChangeEvent<HTMLInputElement>) => {
@@ -306,7 +417,15 @@ export function ProductForm({
     }
 
     if (accepted.length) {
+      setPendingDescription(null);
+      setGenerationError(null);
       setImagePreviews((prev) => [...prev, ...accepted]);
+    }
+
+    const shouldAutoGenerate =
+      !!getValues("name")?.trim() && !getValues("description")?.trim();
+    if (shouldAutoGenerate && accepted[0]) {
+      void attemptGenerateDescription({ file: accepted[0], auto: true });
     }
   };
 
@@ -376,10 +495,16 @@ export function ProductForm({
                 placeholder="Premium cotton t-shirt"
                 value={field.value}
                 onChange={field.onChange}
+                list={nameSuggestionsListId}
                 className={INPUT_EMPHASIS_CLASS}
               />
             )}
           />
+          <datalist id={nameSuggestionsListId}>
+            {filteredNameSuggestions.map((option) => (
+              <option key={option} value={option} />
+            ))}
+          </datalist>
           {errors?.name ? <p className="text-xs text-red-600">{errors.name.message as string}</p> : null}
         </div>
 
@@ -459,9 +584,25 @@ export function ProductForm({
         </div>
 
         <div className={cn("sm:col-span-2", FIELD_FRAME_CLASS)}>
-          <Label className={FIELD_LABEL_CLASS} htmlFor="description">
-            Description
-          </Label>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <Label className={FIELD_LABEL_CLASS} htmlFor="description">
+              Description
+            </Label>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => void attemptGenerateDescription()}
+              disabled={
+                isGeneratingDescription || !imagePreviews.length || !nameValue?.trim()
+              }
+            >
+              {isGeneratingDescription ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : null}
+              {isGeneratingDescription ? "Generating..." : "Generate from image"}
+            </Button>
+          </div>
           <Controller
             control={control}
             name="description"
@@ -476,12 +617,30 @@ export function ProductForm({
             )}
           />
           {errors?.description ? (
-              <p className="text-xs text-red-600">{errors.description.message as string}</p>
+            <p className="text-xs text-red-600">{errors.description.message as string}</p>
+          ) : generationError ? (
+            <p className="text-xs text-red-600">{generationError}</p>
           ) : (
             <p className="text-xs font-semibold text-slate-700">
               Appears on the product detail page. Keep it concise and descriptive.
             </p>
           )}
+          {pendingDescription ? (
+            <Alert className="mt-3 flex flex-col gap-2">
+              <p className="font-semibold">Suggested description</p>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-700">
+                {pendingDescription}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" size="sm" onClick={applyPendingDescription}>
+                  Use this description
+                </Button>
+                <Button type="button" size="sm" variant="outline" onClick={dismissPendingDescription}>
+                  Dismiss
+                </Button>
+              </div>
+            </Alert>
+          ) : null}
         </div>
         </div>
       </section>
