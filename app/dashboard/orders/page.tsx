@@ -26,9 +26,9 @@ export default function OrdersPage() {
             Need to add more products first? Head back to the product catalog.
           </p>
           <div className="mt-4">
-            <Button asChild>
-              <Link href="/dashboard/products">Go to products</Link>
-            </Button>
+            <Link href="/dashboard/products">
+              <Button>Go to products</Button>
+            </Link>
           </div>
         </CardContent>
       </Card>
