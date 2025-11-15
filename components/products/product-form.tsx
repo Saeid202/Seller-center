@@ -428,8 +428,8 @@ export function ProductForm({
 
     const shouldAutoGenerate =
       !!getValues("name")?.trim() && !getValues("description")?.trim();
-    if (shouldAutoGenerate && accepted[0]) {
-      void attemptGenerateDescription({ file: accepted[0], auto: true });
+    if (shouldAutoGenerate && accepted[0]?.file) {
+      void attemptGenerateDescription({ file: accepted[0].file, auto: true });
     }
   };
 
